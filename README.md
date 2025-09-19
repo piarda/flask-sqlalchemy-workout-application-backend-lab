@@ -10,3 +10,15 @@ This is a backend API for tracking workouts and exercises using Flask, SQLAlchem
 4. Run the app via:
         flask run
 
+
+
+
+
+How to Seed the Database
+
+Run the seed script with:
+
+python -m server.seed
+
+
+This ensures proper module imports based on the project structure.
