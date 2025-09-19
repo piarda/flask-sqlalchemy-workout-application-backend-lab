@@ -1,20 +1,22 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import validates
+from datetime import datetime
+
 db = SQLAlchemy()
 
 class Exercise(db.Model):
     __tablename__ = 'exercise'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), nullable=False)
+    name = db.Column(db.String(80), nullable=False, unique=True)
     category = db.Column(db.String(80))
     equipment_needed = db.Column(db.Boolean, default=False)
 
     # One-to-many relationship with WorkoutExercise
-    workout_exercises = db.relationship('WorkoutExercise', backref='exercise', lazy=True)
+    workout_exercises = db.relationship('WorkoutExercise', back_populates='exercise', cascade="all, delete-orphan", overlaps="workouts")
 
-    # Many-to-many relationship with Workout (Exercise has many Workouts through WorkoutExercises)
-    workouts = db.relationship('Workout', secondary='workout_exercise', backref='exercises', lazy=True)
+    # Many-to-many relationship with Workout through WorkoutExercise
+    workouts = db.relationship('Workout', secondary='workout_exercise', back_populates='exercises', overlaps="workout_exercises")
 
     # Length of name for Exercise validation
     @validates('name')
@@ -36,11 +38,11 @@ class Workout(db.Model):
     notes = db.Column(db.Text)
 
     # One-to-many relationship with WorkoutExercise
-    workout_exercises = db.relationship('WorkoutExercise', backref='workout', lazy=True)
+    workout_exercises = db.relationship('WorkoutExercise', back_populates="workout", cascade="all, delete-orphan", overlaps="exercises")
 
-    # Many-to-many relationship with Exercise (Workout has many Exercises through WorkoutExercises)
-    exercises = db.relationship('Exercise', secondary='workout_exercise', backref='workouts', lazy=True)
-
+    # Many-to-many relationship with Exercise through WorkoutExercise
+    exercises = db.relationship('Exercise', secondary='workout_exercise', back_populates="workouts", overlaps="workout_exercises")
+    
     # Table constraint ensuring the duration_minutes is more than 0
     __table_args__ = (
         db.CheckConstraint('duration_minutes > 0', name='check_duration_minutes'),
@@ -74,6 +76,10 @@ class WorkoutExercise(db.Model):
     sets = db.Column(db.Integer)
     duration_seconds = db.Column(db.Integer)
 
+    # One-to-many foreign key relationships
+    workout = db.relationship("Workout", back_populates="workout_exercises", overlaps="exercises,workouts")
+    exercise = db.relationship("Exercise", back_populates="workout_exercises", overlaps="exercises,workouts")
+
     # Table constraint to ensure reps, sets, and duration_seconds are not negative
     __table_args__ = (
         db.CheckConstraint('reps >= 0', name='check_reps_positive'),
@@ -90,4 +96,3 @@ class WorkoutExercise(db.Model):
 
     def __repr__(self):
         return f"<WorkoutExercise {self.workout_id} - {self.exercise_id}>"
-
