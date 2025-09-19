@@ -16,9 +16,17 @@ class Exercise(db.Model):
     # Many-to-many relationship with Workout (Exercise has many Workouts through WorkoutExercises)
     workouts = db.relationship('Workout', secondary='workout_exercise', backref='exercises', lazy=True)
 
+    # Length of name for Exercise validation
+    @validates('name')
+    def validate_name(self, key, value):
+        if len(value) < 3:
+            raise ValueError("Exercise name must be at least 3 characters long")
+        return value
+    
     def __repr__(self):
         return f"<Exercise {self.name}>"
     
+
 class Workout(db.Model):
     __tablename__ = 'workout'
 
@@ -33,9 +41,29 @@ class Workout(db.Model):
     # Many-to-many relationship with Exercise (Workout has many Exercises through WorkoutExercises)
     exercises = db.relationship('Exercise', secondary='workout_exercise', backref='workouts', lazy=True)
 
+    # Table constraint ensuring the duration_minutes is more than 0
+    __table_args__ = (
+        db.CheckConstraint('duration_minutes > 0', name='check_duration_minutes'),
+    )
+
+    # Validation for duration_minutes
+    @validates('duration_minutes')
+    def validate_duration(self, key, value):
+        if value <= 0:
+            raise ValueError("Duration minutes must be greater than zero")
+        return value
+
+    # Validation for date being either past or present
+    @validates('date')
+    def validate_date(self, key, value):
+        if value > datetime.today().date():
+            raise ValueError("Workout date cannot be in the future")
+        return value
+    
     def __repr__(self):
         return f"<Workout {self.id} - {self.date}>"
     
+
 class WorkoutExercise(db.Model):
     __tablename__ = 'workout_exercise'
 
@@ -45,6 +73,20 @@ class WorkoutExercise(db.Model):
     reps = db.Column(db.Integer)
     sets = db.Column(db.Integer)
     duration_seconds = db.Column(db.Integer)
+
+    # Table constraint to ensure reps, sets, and duration_seconds are not negative
+    __table_args__ = (
+        db.CheckConstraint('reps >= 0', name='check_reps_positive'),
+        db.CheckConstraint('sets >= 0', name='check_sets_positive'),
+        db.CheckConstraint('duration_seconds >= 0', name='check_duration_seconds_positive'),
+    )
+
+    # Validation for reps, sets, and duration_seconds
+    @validates('reps', 'sets', 'duration_seconds')
+    def validate_non_negative(self, key, value):
+        if value < 0:
+            raise ValueError(f"{key} must not be negative")
+        return value
 
     def __repr__(self):
         return f"<WorkoutExercise {self.workout_id} - {self.exercise_id}>"
