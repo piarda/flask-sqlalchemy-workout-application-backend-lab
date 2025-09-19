@@ -13,6 +13,9 @@ class Exercise(db.Model):
     # One-to-many relationship with WorkoutExercise
     workout_exercises = db.relationship('WorkoutExercise', backref='exercise', lazy=True)
 
+    # Many-to-many relationship with Workout (Exercise has many Workouts through WorkoutExercises)
+    workouts = db.relationship('Workout', secondary='workout_exercise', backref='exercises', lazy=True)
+
     def __repr__(self):
         return f"<Exercise {self.name}>"
     
@@ -26,6 +29,9 @@ class Workout(db.Model):
 
     # One-to-many relationship with WorkoutExercise
     workout_exercises = db.relationship('WorkoutExercise', backref='workout', lazy=True)
+
+    # Many-to-many relationship with Exercise (Workout has many Exercises through WorkoutExercises)
+    exercises = db.relationship('Exercise', secondary='workout_exercise', backref='workouts', lazy=True)
 
     def __repr__(self):
         return f"<Workout {self.id} - {self.date}>"
