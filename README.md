@@ -1,1 +1,1 @@
-# flask-sqlalchemy-workout-application-backend-lab
+# Flask SQLAlchemy Workout Application Backend
