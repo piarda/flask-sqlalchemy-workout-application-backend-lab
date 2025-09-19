@@ -3,14 +3,15 @@
 from flask import Flask, request, jsonify, make_response
 from flask_migrate import Migrate
 from server.models import db, Workout, Exercise, WorkoutExercise
+from server.schemas import ma
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 migrate = Migrate(app, db)
-
 db.init_app(app)
+ma.init_app(app)
 
 # Workout Endpoints
 @app.route('/workouts', methods=['GET'])
@@ -47,7 +48,7 @@ def delete_exercise(id):
     return jsonify({"message": f"Delete exercise {id}"}), 204
 
 # Add Exercise to Workout
-@app.route('/workouts/int:workout_id>/exercises/<int:exercise_id>/workout_exercises', method=['POST'])
+@app.route('/workouts/int:workout_id>/exercises/<int:exercise_id>/workout_exercises', methods=['POST'])
 def add_exercise_to_workout(workout_id, exercise_id):
     return jsonify({"message": f"Add exercise {exercise_id} to workout {workout_id}"}), 201
 
